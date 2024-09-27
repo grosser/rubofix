@@ -35,7 +35,7 @@ class Rubofix
 
       # fix offenses (in reverse order so line numbers stay correct)
       puts "Fixing MAX=#{max} of #{offenses.size} offenses with MODEL=#{model} ..."
-      rubofix = Rubofix.new(api_key: api_key, model: model, context: context)
+      rubofix = Rubofix.new(api_key:, model:, context:)
       offenses.reverse.first(max).each do |warning|
         rubofix.fix! warning
       end

@@ -54,7 +54,7 @@ describe Rubofix do
 
   describe "#lines_from_file" do
     def call(context)
-      Rubofix.new(api_key: "x", model: "x", context: context).send(:lines_from_file, "MIT-LICENSE", 5)
+      Rubofix.new(api_key: "x", model: "x", context:).send(:lines_from_file, "MIT-LICENSE", 5)
     end
 
     it "finds single line" do
