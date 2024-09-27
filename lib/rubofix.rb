@@ -13,33 +13,55 @@ class Rubofix
 
   def fix!(offense)
     # parse offense
-    match = offense.match(/(.+):(\d+):(\d+): /)
+    match = offense.match(/(.+):(\d+):\d+: \S+ (\S+?):/)
     raise "unable to parse offense #{offense}" unless match
     path = match[1]
     line_number = Integer(match[2])
+    offense_name = match[3]
     line, context = lines_from_file(path, line_number)
 
     # ask openai for a fix
-    prompt = <<~PROMPT
-      Act as super scared ruby code formatter, that never changes meaning, just formatting.
-      This is important production code, nothing except formatting should be changed.
+    prompt =
+      case offense_name
+      when "Gemspec/DevelopmentDependencies"
+        <<~PROMPT
+          Act as ruby code formatter, convert this line taken from a gemspec file into a `gem` method call with `group: :development` for a Gemfile.
+          Never changes meaning, just formatting.
+          - Print only the fixed line, NOTHING ELSE
+          - keep ONLY EXISTING comments
+          - DO NOT ADD NEW COMMENTS
+          - remove leading whitespace
+          #{line}
+        PROMPT
+      else
+        <<~PROMPT
+          Act as ruby code formatter, that never changes meaning, just formatting.
+          This is important production code, nothing except formatting should be changed.
 
-      Fix this rubocop offense: #{offense}
-      - Print only the fixed line, NOTHING ELSE
-      - Do not change the meaning or intent of the code
-      The CONTEXT is as follows:
-      #{context.join("\n")}
-    PROMPT
+          Fix this rubocop offense: #{offense}
+          - Print only the fixed line, NOTHING ELSE
+          - Do not change the meaning or intent of the code
+          The CONTEXT is as follows:
+          #{context.join("\n")}
+        PROMPT
+      end
     puts "prompt:#{prompt}" if ENV["DEBUG"]
     answer = send_to_openai(prompt)
     puts "answer:\n#{answer}" if ENV["DEBUG"]
-
-    # replace line in file
-    answer = answer.strip.sub(/\A```ruby\n(.*)\n```\z/m, "\\1") # it always adds these even when asked to not add
-    whitespace = line[/\A\s*/]
-    answer = "#{whitespace}#{answer.lstrip}" # it often gets confused and messes up the whitespace
     puts "Fixing #{offense} with:\n#{answer}"
-    replace_line_in_file(path, line_number, answer)
+
+    answer = answer.strip.sub(/\A```ruby\n(.*)\n```\z/m, "\\1") # it always adds these even when asked to not add
+
+    case offense_name
+    when "Gemspec/DevelopmentDependencies"
+      remove_line_in_file(path, line_number)
+      append_line_to_file("Gemfile", answer)
+    else
+      # replace line in file
+      whitespace = line[/\A\s*/]
+      answer = "#{whitespace}#{answer.lstrip}" # it often gets confused and messes up the whitespace
+      replace_line_in_file(path, line_number, answer)
+    end
   end
 
   private
@@ -57,6 +79,18 @@ class Rubofix
     lines = File.read(file_path).split("\n", -1)
     lines[line_number - 1] = new_line
     File.write(file_path, lines.join("\n"))
+  end
+
+  def append_line_to_file(path, answer)
+    File.open(path, "a") do |f|
+      f.puts(answer)
+    end
+  end
+
+  def remove_line_in_file(path, line_number)
+    lines = File.read(path).split("\n", -1)
+    lines.delete_at(line_number - 1)
+    File.write(path, lines.join("\n"))
   end
 
   def send_to_openai(prompt)

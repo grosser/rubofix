@@ -14,7 +14,9 @@ class Rubofix
       # autocorrect
       puts "Attempting to use builtin autocorrect ..."
       command = "bundle exec rubocop --autocorrect-all #{argv.shelljoin}"
-      `#{command}`
+      puts command if ENV["DEBUG"]
+      output = `#{command}`
+      puts output if ENV["DEBUG"]
       return 0 if $?.success? # nothing to fix
 
       # get remaining warnings from rubocop
@@ -31,10 +33,10 @@ class Rubofix
       offenses = offenses.map(&:first)
       abort "No offenses found\n#{output}" if offenses.empty?
 
-      # fix offenses
+      # fix offenses (in reverse order so line numbers stay correct)
       puts "Fixing MAX=#{max} of #{offenses.size} offenses with MODEL=#{model} ..."
       rubofix = Rubofix.new(api_key: api_key, model: model, context: context)
-      offenses.first(max).each do |warning|
+      offenses.reverse.first(max).each do |warning|
         rubofix.fix! warning
       end
 
