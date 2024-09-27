@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubofix (0.0.0)
+    rubofix (0.1.0)
 
 GEM
   remote: https://rubygems.org/
