@@ -6,7 +6,8 @@ class Rubofix
   class CLI
     def run(argv)
       # get config first so we fail fast
-      api_key = ENV.fetch("OPENAI_API_KEY")
+      api_key = ENV.fetch("RUBOFIX_API_KEY")
+      url = ENV.fetch("RUBOFIX_URL", "https://api.openai.com")
       model = ENV.fetch("MODEL", "gpt-4o-mini")
       max = Integer(ENV.fetch("MAX", "1"))
       context = Integer(ENV.fetch("CONTEXT", "0"))
@@ -35,7 +36,7 @@ class Rubofix
 
       # fix offenses (in reverse order so line numbers stay correct)
       puts "Fixing MAX=#{max} of #{offenses.size} offenses with MODEL=#{model} ..."
-      rubofix = Rubofix.new(api_key:, model:, context:)
+      rubofix = Rubofix.new(url:, api_key:, model:, context:)
       offenses.reverse.first(max).each do |warning|
         rubofix.fix! warning
       end

@@ -5,7 +5,8 @@ require 'uri'
 require 'json'
 
 class Rubofix
-  def initialize(api_key:, model:, context:)
+  def initialize(url:, api_key:, model:, context:)
+    @url = url
     @api_key = api_key
     @model = model
     @context = context
@@ -94,7 +95,7 @@ class Rubofix
   end
 
   def send_to_openai(prompt)
-    uri = URI.parse("https://api.openai.com/v1/chat/completions")
+    uri = URI.parse("#{@url}/v1/chat/completions")
     request = Net::HTTP::Post.new(uri)
     request.content_type = "application/json"
     request["Authorization"] = "Bearer #{@api_key}"

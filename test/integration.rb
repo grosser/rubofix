@@ -5,7 +5,7 @@
 require_relative "test_helper"
 
 describe "integration" do
-  it "can fix assignment" do
+  it "can fix assignment" do # TODO: this is auto-corrected in latest rubocop, so need a new example
     Tempfile.create("test.rb") do |f|
       File.write f.path, <<~RUBY
         if a = 1

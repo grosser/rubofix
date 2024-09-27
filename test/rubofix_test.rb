@@ -4,6 +4,8 @@ require_relative "test_helper"
 SingleCov.covered!
 
 describe Rubofix do
+  let(:rubofix) { Rubofix.new(url: "https://api.openai.com", api_key: "x", model: "x", context: 0) }
+
   it "has a VERSION" do
     Rubofix::VERSION.must_match /^[.\da-z]+$/
   end
@@ -19,8 +21,6 @@ describe Rubofix do
         end
       end
     end
-
-    let(:rubofix) { Rubofix.new(api_key: "x", model: "x", context: 0) }
 
     it "fixes generic offense" do
       call("%<path>s:2:1: W Foo/Bar: this is bad!").must_match /\AFixing.*\nx\n\z/
@@ -54,7 +54,8 @@ describe Rubofix do
 
   describe "#lines_from_file" do
     def call(context)
-      Rubofix.new(api_key: "x", model: "x", context:).send(:lines_from_file, "MIT-LICENSE", 5)
+      rubofix.instance_variable_set(:@context, context)
+      rubofix.send(:lines_from_file, "MIT-LICENSE", 5)
     end
 
     it "finds single line" do
@@ -82,7 +83,7 @@ describe Rubofix do
 
   describe "#replace_line_in_file" do
     def call(...)
-      Rubofix.new(api_key: "x", model: "x", context: 0).send(:replace_line_in_file, ...)
+      rubofix.send(:replace_line_in_file, ...)
     end
 
     it "replaces a line" do
@@ -106,7 +107,7 @@ describe Rubofix do
     it "appends a line" do
       Tempfile.create("test") do |path|
         File.write(path, "hi\n")
-        Rubofix.new(api_key: "x", model: "x", context: 0).send(:append_line_to_file, path, "x")
+        rubofix.send(:append_line_to_file, path, "x")
         File.read(path).must_equal "hi\nx\n"
       end
     end
@@ -116,7 +117,7 @@ describe Rubofix do
     it "removes a line" do
       Tempfile.create("test") do |path|
         File.write(path, "hi\nho\nfoo\n")
-        Rubofix.new(api_key: "x", model: "x", context: 0).send(:remove_line_in_file, path, 2)
+        rubofix.send(:remove_line_in_file, path, 2)
         File.read(path).must_equal "hi\nfoo\n"
       end
     end
@@ -124,7 +125,7 @@ describe Rubofix do
 
   describe "#send_to_openai" do
     def call
-      Rubofix.new(api_key: "x", model: "x", context: 0).send(:send_to_openai, "hi")
+      rubofix.send(:send_to_openai, "hi")
     end
 
     it "sends" do

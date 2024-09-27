@@ -10,11 +10,12 @@ gem install rubofix
 Usage
 =====
 
-- Get [openai key](https://platform.openai.com/settings/profile?tab=api-keys)
+- Get [openai key](https://platform.openai.com/settings/profile?tab=api-keys) and export as `RUBOFIX_API_KEY=`
+  (for non-openai see "Options" below)
 - Break something for rubocop (remove `# rubocop:disable` comment or remove `Enabled: false` from `.rubocop.yml`)
 
 ```bash
-OPENAI_API_KEY= MAX=2 rubofix
+MAX=2 rubofix
 # Fixing MAX=2 of 35 warnings with MODEL=gpt-4o-mini ...
 # Fixing Rakefile:89:19: W: Lint/AssignmentInCondition: Use == if you meant to do a comparison ... with:
 #  unless (template = args[:template])
@@ -32,6 +33,8 @@ git commit -am 'fixing rubocop warnings'
 - only fix given files `rubofix file1.rb file2.rb`
 - `DEBUG=1` show prompt and answers
 - `CONTEXT=10` feed 10 lines of context around the offense to the model
+- `RUBOFIX_URL=` defaults to `https://api.openai.com`
+- `RUBOFIX_API_KEY=`
 
 
 Development
