@@ -1,4 +1,4 @@
-Auto fix all rubocop warnings with chatgpt / openai / local llm
+Auto fix all rubocop offenses with chatgpt / openai / local llm
 
 Install
 =======
@@ -45,7 +45,6 @@ Development
 TODO
 ====
 
-- configure context window (maybe 0 to start ?)
 - custom api endpoints
 - local LLM support
 - read rubocop.todo file and autofix everything in there

@@ -22,13 +22,27 @@ describe Rubofix do
 
     let(:rubofix) { Rubofix.new(api_key: "x", model: "x", context: 0) }
 
-    it "fixes" do
-      call("%<path>s:2:1: this is bad!").must_match /\AFixing.*\nx\n\z/
+    it "fixes generic offense" do
+      call("%<path>s:2:1: W Foo/Bar: this is bad!").must_match /\AFixing.*\nx\n\z/
+    end
+
+    it "fixes Gemspec/DevelopmentDependencies" do
+      capture_stdout do
+        Dir.mktmpdir "test" do |dir|
+          Dir.chdir dir do
+            File.write("test", "a\nb\nc")
+            rubofix.stubs(:send_to_openai).returns("x")
+            rubofix.fix!("test:2:1: W Gemspec/DevelopmentDependencies: s.add_development_dependency 'foo'")
+            File.read("test").must_equal "a\nc"
+            File.read("Gemfile").must_equal "x\n"
+          end
+        end
+      end.must_match /\AFixing.*\nx\n\z/
     end
 
     it "prints debug info" do
       with_env DEBUG: "1" do
-        call("%<path>s:2:1: this is bad!").must_include "prompt"
+        call("%<path>s:2:1: W Foo/Bar: this is bad!").must_include "prompt"
       end
     end
 
@@ -84,6 +98,26 @@ describe Rubofix do
         File.write(path, "\n\n\n\n\n\n\n")
         call(path, 2, "x")
         File.read(path).must_equal "\nx\n\n\n\n\n\n"
+      end
+    end
+  end
+
+  describe "#append_line_to_file" do
+    it "appends a line" do
+      Tempfile.create("test") do |path|
+        File.write(path, "hi\n")
+        Rubofix.new(api_key: "x", model: "x", context: 0).send(:append_line_to_file, path, "x")
+        File.read(path).must_equal "hi\nx\n"
+      end
+    end
+  end
+
+  describe "#remove_line_in_file" do
+    it "removes a line" do
+      Tempfile.create("test") do |path|
+        File.write(path, "hi\nho\nfoo\n")
+        Rubofix.new(api_key: "x", model: "x", context: 0).send(:remove_line_in_file, path, 2)
+        File.read(path).must_equal "hi\nfoo\n"
       end
     end
   end
