@@ -54,6 +54,9 @@ TODO
 - retry on api failures
 - parallel execution
 - colored output
+- try different temperatures to get better results
+- try to send output back to llm with "check this makes sense" to fix bugs
+- produce diffs and then apply them so we can fix multiple things in 1 file without changing line numbers
 
 
 Author
